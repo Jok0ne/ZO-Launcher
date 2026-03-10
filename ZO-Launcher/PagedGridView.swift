@@ -159,7 +159,8 @@ struct PagedGridView: View {
 
                 } else {
                     // Search results - same layout as grid pages
-                    ContentView(apps: filteredApps(), columns: columns, iconScale: CGFloat(iconScale))
+                    Spacer().frame(height: 60)
+                    ContentView(apps: filteredApps(), columns: columns, iconScale: CGFloat(iconScale), showNumbers: true)
                         .contentShape(Rectangle())
                         .onTapGesture {}
                 }
@@ -225,8 +226,9 @@ struct PagedGridView: View {
                     return nil
                 }
 
-                // 1-9: launch Nth result
-                if let chars = event.charactersIgnoringModifiers,
+                // Cmd+1-9: launch Nth result
+                if event.modifierFlags.contains(.command),
+                   let chars = event.charactersIgnoringModifiers,
                    let digit = Int(chars), digit >= 1 && digit <= 9 {
                     let index = digit - 1
                     if index < results.count {

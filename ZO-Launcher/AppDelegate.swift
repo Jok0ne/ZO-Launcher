@@ -12,6 +12,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return false
     }
 
+    func applicationDidResignActive(_ notification: Notification) {
+        AppDelegate.hideApp()
+    }
+
     // MARK: - Global Hotkey (Ctrl+Space)
 
     private func registerHotKey() {

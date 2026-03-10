@@ -1,4 +1,5 @@
 import SwiftUI
+import ServiceManagement
 
 struct SettingsView: View {
     var onClose: () -> Void
@@ -6,6 +7,12 @@ struct SettingsView: View {
     @AppStorage("gridColumns") private var gridColumns: Int = 7
     @AppStorage("gridRows") private var gridRows: Int = 5
     @AppStorage("iconScale") private var iconScale: Double = 0.5
+    @State private var launchAtLogin: Bool = {
+        if #available(macOS 13.0, *) {
+            return SMAppService.mainApp.status == .enabled
+        }
+        return false
+    }()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -89,11 +96,37 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+
+                Divider()
+
+                // Start at Login
+                if #available(macOS 13.0, *) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Start at Login", isOn: $launchAtLogin)
+                            .font(.headline)
+                            .onChange(of: launchAtLogin) { newValue in
+                                do {
+                                    if newValue {
+                                        try SMAppService.mainApp.register()
+                                    } else {
+                                        try SMAppService.mainApp.unregister()
+                                    }
+                                } catch {
+                                    print("Login item error: \(error)")
+                                    launchAtLogin = !newValue
+                                }
+                            }
+
+                        Text("Hotkey: Ctrl + Space")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
             .padding()
 
             Spacer()
         }
-        .frame(minWidth: 350, minHeight: 250)
+        .frame(minWidth: 350, minHeight: 300)
     }
 }

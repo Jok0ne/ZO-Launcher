@@ -47,7 +47,8 @@ struct PagedGridView: View {
     @State private var lastScrollTime = Date.distantPast
     let scrollDebounceInterval: TimeInterval = 0.4
     @State private var searchText = ""
-    @State private var eventMonitor: Any?
+    @State private var scrollMonitor: Any?
+    @State private var keyMonitor: Any?
 
     var body: some View {
         ZStack {
@@ -56,7 +57,7 @@ struct PagedGridView: View {
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    NSApp.terminate(nil)
+                    AppDelegate.hideApp()
                 }
 
             VStack(spacing: 0) {
@@ -110,56 +111,6 @@ struct PagedGridView: View {
                                     currentPage = newPage
                                 }
                         )
-                        .onAppear {
-                            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { event in
-                                let now = Date()
-                                if now.timeIntervalSince(lastScrollTime) < scrollDebounceInterval {
-                                    return event
-                                }
-
-                                let scrollThreshold: CGFloat = 10
-                                let x = event.scrollingDeltaX
-                                let y = event.scrollingDeltaY
-
-                                if abs(x) > abs(y) || abs(y) > scrollThreshold {
-                                    if x < -scrollThreshold || y < scrollThreshold {
-                                        currentPage = (currentPage + 1) % pages.count
-                                        lastScrollTime = now
-                                        return nil
-                                    } else if x > scrollThreshold || y > -scrollThreshold {
-                                        currentPage = (currentPage - 1 + pages.count) % pages.count
-                                        lastScrollTime = now
-                                        return nil
-                                    }
-                                }
-
-                                return event
-                            }
-
-                            NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                                if event.keyCode == 53 { // ESC
-                                    NSApp.terminate(nil)
-                                    return nil
-                                } else if event.keyCode == 123 { // Left arrow
-                                    if currentPage > 0 {
-                                        currentPage -= 1
-                                    }
-                                    return nil
-                                } else if event.keyCode == 124 { // Right arrow
-                                    if currentPage < pages.count - 1 {
-                                        currentPage += 1
-                                    }
-                                    return nil
-                                }
-                                return event
-                            }
-                        }
-                        .onDisappear {
-                            if let monitor = eventMonitor {
-                                NSEvent.removeMonitor(monitor)
-                                eventMonitor = nil
-                            }
-                        }
                     }
 
                     // Page selector + close button
@@ -190,7 +141,7 @@ struct PagedGridView: View {
 
                         // Close button
                         Button(action: {
-                            NSApp.terminate(nil)
+                            AppDelegate.hideApp()
                         }) {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 20))
@@ -209,9 +160,109 @@ struct PagedGridView: View {
                 } else {
                     // Search results - same layout as grid pages
                     ContentView(apps: filteredApps(), columns: columns, iconScale: CGFloat(iconScale))
+                        .contentShape(Rectangle())
+                        .onTapGesture {}
                 }
             }
         }
+        .onAppear { installMonitors() }
+        .onDisappear { removeMonitors() }
+    }
+
+    // MARK: - Event Monitors
+
+    private func installMonitors() {
+        scrollMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { event in
+            guard searchText.isEmpty else { return event }
+            let now = Date()
+            if now.timeIntervalSince(lastScrollTime) < scrollDebounceInterval {
+                return event
+            }
+
+            let scrollThreshold: CGFloat = 10
+            let x = event.scrollingDeltaX
+            let y = event.scrollingDeltaY
+
+            if abs(x) > abs(y) || abs(y) > scrollThreshold {
+                if x < -scrollThreshold || y < scrollThreshold {
+                    currentPage = (currentPage + 1) % pages.count
+                    lastScrollTime = now
+                    return nil
+                } else if x > scrollThreshold || y > -scrollThreshold {
+                    currentPage = (currentPage - 1 + pages.count) % pages.count
+                    lastScrollTime = now
+                    return nil
+                }
+            }
+
+            return event
+        }
+
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // Read search field content directly (avoids stale @State capture)
+            let fieldText = (NSApp.keyWindow?.firstResponder as? NSText)?.string ?? ""
+            let isSearching = !fieldText.isEmpty
+
+            // ESC: clear search first, then hide
+            if event.keyCode == 53 {
+                if isSearching {
+                    searchText = ""
+                } else {
+                    AppDelegate.hideApp()
+                }
+                return nil
+            }
+
+            // When search is active
+            if isSearching {
+                let results = filteredApps()
+
+                // Enter: launch first result
+                if event.keyCode == 36 {
+                    if let first = results.first {
+                        launchApp(first)
+                    }
+                    return nil
+                }
+
+                // 1-9: launch Nth result
+                if let chars = event.charactersIgnoringModifiers,
+                   let digit = Int(chars), digit >= 1 && digit <= 9 {
+                    let index = digit - 1
+                    if index < results.count {
+                        launchApp(results[index])
+                    }
+                    return nil
+                }
+
+                // Pass everything else to search field
+                return event
+            }
+
+            // Grid mode: arrow keys for page navigation
+            if event.keyCode == 123 { // Left
+                if currentPage > 0 { currentPage -= 1 }
+                return nil
+            } else if event.keyCode == 124 { // Right
+                if currentPage < pages.count - 1 { currentPage += 1 }
+                return nil
+            }
+
+            return event
+        }
+    }
+
+    private func removeMonitors() {
+        if let m = scrollMonitor { NSEvent.removeMonitor(m); scrollMonitor = nil }
+        if let m = keyMonitor { NSEvent.removeMonitor(m); keyMonitor = nil }
+    }
+
+    // MARK: - Helpers
+
+    private func launchApp(_ app: AppInfo) {
+        NSWorkspace.shared.open(URL(fileURLWithPath: app.path))
+        searchText = ""
+        AppDelegate.hideApp()
     }
 
     func filteredApps() -> [AppInfo] {
@@ -256,7 +307,7 @@ struct AppIconView: View {
         .frame(width: size + 30)
         .onTapGesture {
             NSWorkspace.shared.open(URL(fileURLWithPath: app.path))
-            NSApp.terminate(nil)
+            AppDelegate.hideApp()
         }
     }
 }

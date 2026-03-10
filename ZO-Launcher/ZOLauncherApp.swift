@@ -10,6 +10,7 @@ extension Array {
 
 @main
 struct ZOLauncherApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var apps: [AppInfo] = Self.loadApps()
     @State private var showSettings = false
 

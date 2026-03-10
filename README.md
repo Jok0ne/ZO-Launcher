@@ -1,8 +1,19 @@
-# ZO-Launcher
+<p align="center">
+  <img src="ZO-Launcher/Assets.xcassets/AppIcon.appiconset/icon_256.png" width="128" alt="ZO-Launcher Icon">
+</p>
 
-The Launchpad Apple removed — rebuilt properly.
+<h1 align="center">ZO-Launcher</h1>
+<p align="center"><strong>The Launchpad Apple removed — rebuilt properly.</strong></p>
 
-![macOS](https://img.shields.io/badge/macOS-26_Tahoe-blue) ![Swift](https://img.shields.io/badge/Swift-SwiftUI-orange) ![License](https://img.shields.io/badge/License-MIT-green)
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-26_Tahoe-blue" alt="macOS">
+  <img src="https://img.shields.io/badge/Swift-SwiftUI-orange" alt="Swift">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+</p>
+
+<p align="center">
+  <img src="screenshots/grid.png" width="800" alt="ZO-Launcher Grid View">
+</p>
 
 ## Why?
 
@@ -18,6 +29,11 @@ macOS 26 Tahoe removed the Launchpad entirely. The replacement (Spotlight-based 
 - Arrow keys, drag, or scroll wheel to switch pages
 
 ### Search
+
+<p align="center">
+  <img src="screenshots/search.png" width="800" alt="ZO-Launcher Search">
+</p>
+
 - Auto-focused search bar — just start typing
 - Results displayed in same grid layout with numbered badges (1-9)
 - **Enter** launches first result

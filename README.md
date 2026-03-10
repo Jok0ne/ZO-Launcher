@@ -46,6 +46,11 @@ macOS 26 Tahoe removed the Launchpad entirely. The replacement (Spotlight-based 
 - Auto-hides when clicking another app (focus loss)
 
 ### Settings (Cmd+,)
+
+<p align="center">
+  <img src="screenshots/settings.png" width="400" alt="ZO-Launcher Settings">
+</p>
+
 - Grid Columns slider (4-10)
 - Grid Rows slider (3-8)
 - Icon Size slider (Small/Medium/Large)

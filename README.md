@@ -1,6 +1,6 @@
 # ZO-Launcher
 
-A fast, lightweight app launcher for macOS Tahoe (26) — built because Apple removed Launchpad.
+The Launchpad Apple removed — rebuilt properly.
 
 ![macOS](https://img.shields.io/badge/macOS-26_Tahoe-blue) ![Swift](https://img.shields.io/badge/Swift-SwiftUI-orange) ![License](https://img.shields.io/badge/License-MIT-green)
 

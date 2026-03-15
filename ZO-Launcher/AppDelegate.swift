@@ -1,8 +1,9 @@
 import AppKit
-import Carbon
+import CoreGraphics
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-    private var hotKeyRef: EventHotKeyRef?
+    private var eventTap: CFMachPort?
+    private var runLoopSource: CFRunLoopSource?
     private static var isVisible = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -29,38 +30,44 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Global Hotkey (Ctrl+Space)
 
     private func registerHotKey() {
-        var hotKeyID = EventHotKeyID()
-        hotKeyID.signature = OSType(0x5A4F4C43) // "ZOLC"
-        hotKeyID.id = 1
+        let eventMask: CGEventMask = (1 << CGEventType.keyDown.rawValue)
 
-        var eventType = EventTypeSpec()
-        eventType.eventClass = OSType(kEventClassKeyboard)
-        eventType.eventKind = UInt32(kEventHotKeyPressed)
+        guard let tap = CGEvent.tapCreate(
+            tap: .cgSessionEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: eventMask,
+            callback: { _, _, event, _ -> Unmanaged<CGEvent>? in
+                let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+                let flags = event.flags
 
-        let handler: EventHandlerUPP = { _, event, _ -> OSStatus in
-            AppDelegate.toggleApp()
-            return noErr
+                // Ctrl+Space: keyCode 49 = Space, check Ctrl is pressed (no other modifiers)
+                if keyCode == 49 && flags.contains(.maskControl)
+                    && !flags.contains(.maskShift)
+                    && !flags.contains(.maskAlternate)
+                    && !flags.contains(.maskCommand) {
+                    DispatchQueue.main.async {
+                        AppDelegate.toggleApp()
+                    }
+                    return nil // consume the event
+                }
+
+                return Unmanaged.passRetained(event)
+            },
+            userInfo: nil
+        ) else {
+            print("Failed to create event tap. Grant Accessibility permissions in System Settings.")
+            return
         }
 
-        InstallEventHandler(GetApplicationEventTarget(), handler, 1, &eventType, nil, nil)
-
-        // Ctrl+Space: controlKey = 0x1000, Space = 49
-        let status = RegisterEventHotKey(
-            UInt32(kVK_Space),
-            UInt32(controlKey),
-            hotKeyID,
-            GetApplicationEventTarget(),
-            0,
-            &hotKeyRef
-        )
-
-        if status != noErr {
-            print("Failed to register hotkey: \(status)")
-        }
+        eventTap = tap
+        runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
     }
 
     static func toggleApp() {
-        if let window = NSApp.windows.first(where: { $0.isVisible && !$0.title.contains("Settings") }) {
+        if isVisible {
             hideApp()
         } else {
             showApp()

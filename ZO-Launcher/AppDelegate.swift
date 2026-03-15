@@ -3,6 +3,7 @@ import Carbon
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotKeyRef: EventHotKeyRef?
+    private static var isVisible = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         registerHotKey()
@@ -14,6 +15,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidResignActive(_ notification: Notification) {
         AppDelegate.hideApp()
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if AppDelegate.isVisible {
+            AppDelegate.hideApp()
+        } else {
+            AppDelegate.showApp()
+        }
+        return false
     }
 
     // MARK: - Global Hotkey (Ctrl+Space)
@@ -57,7 +67,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    static let reloadAppsNotification = Notification.Name("ZOLauncherReloadApps")
+
     static func showApp() {
+        isVisible = true
+        NotificationCenter.default.post(name: reloadAppsNotification, object: nil)
         NSApp.unhide(nil)
         NSApp.activate(ignoringOtherApps: true)
         for window in NSApp.windows where !window.title.contains("Settings") {
@@ -67,6 +81,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     static func hideApp() {
+        isVisible = false
         NSApp.hide(nil)
     }
 }

@@ -33,6 +33,9 @@ struct ZOLauncherApp: App {
                             showSettings = false
                         }
                     }
+                    .onReceive(NotificationCenter.default.publisher(for: AppDelegate.reloadAppsNotification)) { _ in
+                        apps = Self.loadApps()
+                    }
             }
         }
         .windowStyle(.hiddenTitleBar)

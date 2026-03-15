@@ -70,7 +70,7 @@ macOS 26 Tahoe removed the Launchpad entirely. The replacement (Spotlight-based 
 ## Tech Stack
 
 - **SwiftUI** with AppKit integration (NSViewRepresentable)
-- **Carbon Events API** for global hotkey registration
+- **CGEventTap API** for global hotkey registration
 - **SMAppService** for Start at Login (macOS 13+)
 - **@AppStorage** for persistent user settings
 - No external dependencies
@@ -97,7 +97,23 @@ ZO-Launcher/
 └── Assets.xcassets/             # Custom rocket app icon
 ```
 
+## Install
+
+**Mac App Store** — [ZO-Launcher on the App Store](https://apps.apple.com/app/zo-launcher/id6760612327) ($2.99)
+
+**Manual** — Download from [Releases](https://github.com/Jok0ne/ZO-Launcher/releases), move to `/Applications`, and grant Accessibility permission when prompted.
+
 ## Version History
+
+### v1.1
+- Dock icon click to show/hide launcher
+- Localized app names (shows "Fotos" instead of "Photos" on German macOS)
+- Auto-reload app list when launcher opens (picks up newly installed apps)
+- Fixed trackpad scrolling glitch (momentum event filtering)
+- Fixed click stability (stable view IDs)
+- Fixed grid centering on all displays
+- Migrated global hotkey from deprecated Carbon API to CGEventTap
+- App Sandbox enabled
 
 ### v1.0
 - Fullscreen grid launcher with paged navigation

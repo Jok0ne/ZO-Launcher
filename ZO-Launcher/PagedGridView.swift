@@ -175,6 +175,10 @@ struct PagedGridView: View {
     private func installMonitors() {
         scrollMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { event in
             guard searchText.isEmpty else { return event }
+
+            // Ignore trackpad momentum/inertia events
+            if event.momentumPhase != [] { return event }
+
             let now = Date()
             if now.timeIntervalSince(lastScrollTime) < scrollDebounceInterval {
                 return event
@@ -184,16 +188,23 @@ struct PagedGridView: View {
             let x = event.scrollingDeltaX
             let y = event.scrollingDeltaY
 
-            if abs(x) > abs(y) || abs(y) > scrollThreshold {
-                if x < -scrollThreshold || y < scrollThreshold {
-                    currentPage = (currentPage + 1) % pages.count
-                    lastScrollTime = now
-                    return nil
-                } else if x > scrollThreshold || y > -scrollThreshold {
-                    currentPage = (currentPage - 1 + pages.count) % pages.count
-                    lastScrollTime = now
-                    return nil
+            // Horizontal swipe (trackpad) or vertical scroll (mouse wheel)
+            if abs(x) > scrollThreshold {
+                if x < -scrollThreshold {
+                    currentPage = min(currentPage + 1, pages.count - 1)
+                } else {
+                    currentPage = max(currentPage - 1, 0)
                 }
+                lastScrollTime = now
+                return nil
+            } else if abs(y) > scrollThreshold && abs(y) > abs(x) {
+                if y < -scrollThreshold {
+                    currentPage = min(currentPage + 1, pages.count - 1)
+                } else {
+                    currentPage = max(currentPage - 1, 0)
+                }
+                lastScrollTime = now
+                return nil
             }
 
             return event

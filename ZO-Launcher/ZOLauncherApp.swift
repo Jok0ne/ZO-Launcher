@@ -72,7 +72,7 @@ struct ZOLauncherApp: App {
 }
 
 struct AppInfo: Identifiable {
-    let id = UUID()
+    var id: String { path }
     let name: String
     let bundleName: String
     let icon: NSImage

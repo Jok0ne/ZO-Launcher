@@ -48,7 +48,7 @@ struct ContentView: View {
             VStack(spacing: 16) {
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.fixed(cellWidth), spacing: spacing), count: columns),
-                    alignment: .leading,
+                    alignment: .center,
                     spacing: spacing
                 ) {
                     ForEach(Array(apps.enumerated()), id: \.element.id) { index, app in

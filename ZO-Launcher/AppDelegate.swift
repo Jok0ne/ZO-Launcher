@@ -52,7 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     return nil // consume the event
                 }
 
-                return Unmanaged.passRetained(event)
+                return Unmanaged.passUnretained(event)
             },
             userInfo: nil
         ) else {

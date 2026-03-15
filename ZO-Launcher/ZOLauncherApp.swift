@@ -58,10 +58,12 @@ struct ZOLauncherApp: App {
 
             for item in contents where item.hasSuffix(".app") {
                 let fullPath = basePath + "/" + item
-                let appName = item.replacingOccurrences(of: ".app", with: "")
+                let bundleName = item.replacingOccurrences(of: ".app", with: "")
+                let url = URL(fileURLWithPath: fullPath)
+                let localizedName = (try? url.resourceValues(forKeys: [.localizedNameKey]))?.localizedName?.replacingOccurrences(of: ".app", with: "") ?? bundleName
                 let icon = NSWorkspace.shared.icon(forFile: fullPath)
                 icon.size = NSSize(width: 64, height: 64)
-                foundApps.append(AppInfo(name: appName, icon: icon, path: fullPath))
+                foundApps.append(AppInfo(name: localizedName, bundleName: bundleName, icon: icon, path: fullPath))
             }
         }
 
@@ -72,6 +74,7 @@ struct ZOLauncherApp: App {
 struct AppInfo: Identifiable {
     let id = UUID()
     let name: String
+    let bundleName: String
     let icon: NSImage
     let path: String
 }

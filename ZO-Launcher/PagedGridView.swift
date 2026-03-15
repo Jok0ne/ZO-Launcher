@@ -268,8 +268,9 @@ struct PagedGridView: View {
     }
 
     func filteredApps() -> [AppInfo] {
-        pages.flatMap { $0 }.filter {
-            $0.name.lowercased().contains(searchText.lowercased())
+        let query = searchText.lowercased()
+        return pages.flatMap { $0 }.filter {
+            $0.name.lowercased().contains(query) || $0.bundleName.lowercased().contains(query)
         }
     }
 }
